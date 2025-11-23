@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Multi-Service Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .response {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-ok {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .status-error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .info {
+            background: #e0e7ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .info code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #e0e7ff;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Azure Multi-Service Demo Application</h1>
+
+        <div class="card info">
+            <h3>Configuration</h3>
+            <p>Configure your Container App API endpoint:</p>
+            <input type="text" id="apiEndpoint" placeholder="https://your-container-app.azurecontainerapps.io"
+                   value="">
+            <button onclick="saveConfig()">Save Configuration</button>
+        </div>
+
+        <div class="card">
+            <h2>Container App API Tests</h2>
+            <p>Test the public-facing Container App that integrates with all Azure services</p>
+            <div class="button-group">
+                <button onclick="testHealth()">Health Check</button>
+                <button onclick="testKeyVault()">Test Key Vault</button>
+                <button onclick="testStorage()">Test Storage</button>
+                <button onclick="testDatabase()">Test Database</button>
+                <button onclick="testFunction()">Call Function App</button>
+            </div>
+            <div id="apiResponse" class="response" style="display: none;">
+                <pre id="apiResponseContent"></pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Storage Operations</h2>
+            <p>Upload a blob to Azure Storage via Container App</p>
+            <input type="text" id="containerName" placeholder="Container Name (e.g., demo-container)" value="demo-container">
+            <input type="text" id="blobName" placeholder="Blob Name (e.g., test.txt)" value="test.txt">
+            <input type="text" id="blobContent" placeholder="Content to upload" value="Hello from Static Web App!">
+            <button onclick="uploadBlob()">Upload Blob</button>
+            <div id="uploadResponse" class="response" style="display: none;">
+                <pre id="uploadResponseContent"></pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>About This Demo</h2>
+            <p><strong>This application demonstrates:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                <li><strong>Static Web App:</strong> Hosting this frontend application</li>
+                <li><strong>Container App:</strong> Public API running in a container from ACR</li>
+                <li><strong>Function App:</strong> Private backend service (VNet integrated)</li>
+                <li><strong>Azure SQL:</strong> Database with managed identity authentication</li>
+                <li><strong>Storage Account:</strong> Blob storage with private endpoint</li>
+                <li><strong>Key Vault:</strong> Secrets management with RBAC</li>
+                <li><strong>ACR:</strong> Private container registry</li>
+                <li><strong>Managed Identity:</strong> Secure, keyless authentication throughout</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Load saved API endpoint from localStorage
+        window.onload = function() {
+            const saved = localStorage.getItem('apiEndpoint');
+            if (saved) {
+                document.getElementById('apiEndpoint').value = saved;
+            }
+        };
+
+        function saveConfig() {
+            const endpoint = document.getElementById('apiEndpoint').value;
+            localStorage.setItem('apiEndpoint', endpoint);
+            alert('Configuration saved!');
+        }
+
+        function getApiEndpoint() {
+            const endpoint = document.getElementById('apiEndpoint').value;
+            if (!endpoint) {
+                alert('Please configure the API endpoint first');
+                return null;
+            }
+            return endpoint.replace(/\/$/, ''); // Remove trailing slash
+        }
+
+        async function makeRequest(url, options = {}) {
+            const apiEndpoint = getApiEndpoint();
+            if (!apiEndpoint) return;
+
+            const fullUrl = `${apiEndpoint}${url}`;
+
+            showLoading('apiResponse', 'apiResponseContent');
+
+            try {
+                const response = await fetch(fullUrl, options);
+                const data = await response.json();
+
+                displayResponse('apiResponse', 'apiResponseContent', data, response.ok);
+            } catch (error) {
+                displayResponse('apiResponse', 'apiResponseContent', {
+                    error: error.message,
+                    message: 'Failed to connect to API'
+                }, false);
+            }
+        }
+
+        function testHealth() {
+            makeRequest('/health');
+        }
+
+        function testKeyVault() {
+            makeRequest('/api/keyvault/test');
+        }
+
+        function testStorage() {
+            makeRequest('/api/storage/test');
+        }
+
+        function testDatabase() {
+            makeRequest('/api/database/test');
+        }
+
+        function testFunction() {
+            makeRequest('/api/function/call');
+        }
+
+        async function uploadBlob() {
+            const apiEndpoint = getApiEndpoint();
+            if (!apiEndpoint) return;
+
+            const containerName = document.getElementById('containerName').value;
+            const blobName = document.getElementById('blobName').value;
+            const content = document.getElementById('blobContent').value;
+
+            if (!containerName || !blobName || !content) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            showLoading('uploadResponse', 'uploadResponseContent');
+
+            try {
+                const response = await fetch(`${apiEndpoint}/api/storage/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        containerName,
+                        blobName,
+                        content
+                    })
+                });
+
+                const data = await response.json();
+                displayResponse('uploadResponse', 'uploadResponseContent', data, response.ok);
+            } catch (error) {
+                displayResponse('uploadResponse', 'uploadResponseContent', {
+                    error: error.message,
+                    message: 'Failed to upload blob'
+                }, false);
+            }
+        }
+
+        function showLoading(responseId, contentId) {
+            const responseDiv = document.getElementById(responseId);
+            const contentDiv = document.getElementById(contentId);
+
+            responseDiv.style.display = 'block';
+            contentDiv.innerHTML = '<span class="loading"></span> Loading...';
+        }
+
+        function displayResponse(responseId, contentId, data, isOk) {
+            const responseDiv = document.getElementById(responseId);
+            const contentDiv = document.getElementById(contentId);
+
+            responseDiv.style.display = 'block';
+
+            const statusClass = isOk ? 'status-ok' : 'status-error';
+            const statusText = isOk ? '✓ SUCCESS' : '✗ ERROR';
+
+            contentDiv.innerHTML = `<span class="${statusClass}">${statusText}</span>\n\n${JSON.stringify(data, null, 2)}`;
+        }
+    </script>
+</body>
+</html>

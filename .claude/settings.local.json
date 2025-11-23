@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(az functionapp deployment source config-zip:*)",
+      "Bash(func azure functionapp publish:*)",
+      "Bash(curl:*)",
+      "Bash(az containerapp revision list:*)",
+      "Bash(az containerapp logs show:*)",
+      "Bash(az containerapp ingress update:*)",
+      "Bash(az functionapp stop:*)",
+      "Bash(az sql db pause:*)",
+      "Bash(az sql db list-editions:*)",
+      "Bash(git init:*)",
+      "Bash(git config:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
