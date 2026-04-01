@@ -461,4 +461,4 @@ For issues, questions, or contributions:
 
 **Cost**: Optimized with stop/start scripts
 
-<!-- activity: 2026-03-25T11:24:29 -->
+<!-- activity: pr-1-terraform-private-connection -->
