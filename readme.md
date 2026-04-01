@@ -460,3 +460,5 @@ For issues, questions, or contributions:
 **Security**: Zero secrets in code, managed identity throughout
 
 **Cost**: Optimized with stop/start scripts
+
+<!-- activity: init -->
